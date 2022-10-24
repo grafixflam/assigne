@@ -1,1 +1,28 @@
+import paramiko
+import getpass
+import telnetlib
 
+command = "df"
+
+host = "192.168.56.101"
+username = "prne"
+password = "cisco123!"
+password_enable = "class123!"
+
+client = paramiko.client.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+client.connect(host, username=username, password=password)
+_stdin, _stdout,_stderr = client.exec_command("df")
+print(_stdout.read().decode())
+client.close()
+
+tn = telnetlib.Telnet()
+tn.open(host)
+ 
+tn.read_until(b"login: ")
+tn.write(username.encode("ascii")+b"\n")
+tn.read_until(b"Password: ")
+tn.write(password.encode("ascii")+b"\n")
+tn.write(b"exit\n")
+print(tn.read_all())
+tn.close()
