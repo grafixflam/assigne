@@ -1,6 +1,6 @@
+import pexpect
 import paramiko
-import getpass
-import telnetlib
+
 
 command = "df"
 
@@ -16,13 +16,34 @@ _stdin, _stdout,_stderr = client.exec_command("df")
 print(_stdout.read().decode())
 client.close()
 
-tn = telnetlib.Telnet()
-tn.open(host)
+session = pexpect.spawn('telnet ' + host, encoding='utf-8',  timeout=20)
+result = session.expect(['Username:', pexpect.TIMEOUT])
+
+if result != 0:
+ print('--- FAILURE! creating session for: ', host)
+ exit()
  
-tn.read_until(b"login: ")
-tn.write(username.encode("ascii")+b"\n")
-tn.read_until(b"Password: ")
-tn.write(password.encode("ascii")+b"\n")
-tn.write(b"exit\n")
-print(tn.read_all())
-tn.close()
+session.sendline(username)
+result = session.expect(['Password:', pexpect.TIMEOUT])
+
+if result != 0:
+ print('--- FAILURE! entering username: ', username)
+ exit()
+
+session.sendline(password)
+result = session.expect(['#', pexpect.TIMEOUT])
+
+if result != 0:
+ print('--- FAILURE! entering password: ', password)
+ exit()
+
+print('------------------------------------------------------')
+print('')
+print('--- Success! connecting to: ', host)
+print('--- Username: ', username)
+print('--- Password: ', password)
+print('')
+print('------------------------------------------------------')
+
+session.sendline('quit')
+session.close()
